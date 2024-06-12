@@ -2,14 +2,30 @@ import mongoose from 'mongoose';
 import { CreateEventDto } from './dtos/CreateEvent.dot';
 import EventModel, { IEvent } from './models/Event';
 import { Event } from './types/response';
+import { SortOrder } from 'mongoose';
 
-
-
-// this event service instance shows how to create a event, get a event by id, and get all events with in-memory data
 class EventService {
   
     async getEventById(id: string): Promise<IEvent | null> {
       return await EventModel.findById(id).exec();
+    }
+
+    async getEventsByCity(city: string, page: number, limit: number, sortBy: string, sortDirection: 'asc' | 'desc'): Promise<IEvent[]> {
+      const skip = (page - 1) * limit;
+      const sortOptions: { [key: string]: SortOrder } = { [sortBy]: sortDirection === 'desc' ? -1 : 1 };
+  
+      const events = await EventModel.find({ city })
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .exec();
+  
+      console.log('Events found:', events); // Log events found
+      return events;
+    }
+  
+    async countEventsByCity(city: string): Promise<number> {
+      return await EventModel.countDocuments({ city }).exec();
     }
 
     async getEvents(): Promise<IEvent[]> {
